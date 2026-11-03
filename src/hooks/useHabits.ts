@@ -44,6 +44,17 @@ export function useHabits() {
       }),
     );
   }, []);
+  const importHabits = useCallback((imported: Habit[]) => {
+    // Простая защита: заменяем текущие данные на импортированные
+    setHabits(imported);
+  }, []);
 
-  return { habits, addHabit, removeHabit, toggleToday, updateHabit };
+  return {
+    habits,
+    addHabit,
+    removeHabit,
+    toggleToday,
+    updateHabit,
+    importHabits,
+  };
 }

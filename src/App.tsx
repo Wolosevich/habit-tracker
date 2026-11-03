@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import "@mantine/core/styles.css";
 import {
   MantineProvider,
@@ -13,6 +13,8 @@ import {
   Button,
   Group,
 } from "@mantine/core";
+import { IconDownload, IconUpload } from "@tabler/icons-react";
+import { downloadHabits, readHabitsFromFile } from "./lib/backup";
 import { useHabits } from "./hooks/useHabits";
 import { HabitForm } from "./components/HabitForm";
 import { HabitCard } from "./components/HabitCard";
@@ -29,8 +31,16 @@ export default function App() {
 }
 
 function AppContent() {
-  const { habits, addHabit, removeHabit, toggleToday, updateHabit } =
-    useHabits();
+  const {
+    habits,
+    addHabit,
+    removeHabit,
+    toggleToday,
+    updateHabit,
+    importHabits,
+  } = useHabits();
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Состояния для модалок
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
@@ -39,23 +49,69 @@ function AppContent() {
   const handleUpdate = (data: NewHabit) => {
     if (editingHabit) {
       updateHabit(editingHabit.id, data);
-      setEditingHabit(null); // Закрываем модалку
+      setEditingHabit(null);
     }
   };
 
   const handleConfirmDelete = () => {
     if (deletingHabit) {
       removeHabit(deletingHabit.id);
-      setDeletingHabit(null); // Закрываем модалку
+      setDeletingHabit(null);
+    }
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const imported = await readHabitsFromFile(file);
+      importHabits(imported);
+      alert("Данные успешно загружены!");
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   return (
     <Container size="sm" py="xl">
-      <Title order={1}>Трекер привычек</Title>
-      <Text c="dimmed" mt="sm">
-        Отслеживайте свои ежедневные привычки.
-      </Text>
+      {/* Группа с заголовком и кнопками экспорта/импорта */}
+      <Group justify="space-between" align="flex-end" mt="sm" mb="lg">
+        <div>
+          <Title order={1}>Трекер привычек</Title>
+          <Text c="dimmed" mt="sm">
+            Отслеживайте свои ежедневные привычки.
+          </Text>
+        </div>
+        <Group gap="xs">
+          <Button
+            variant="light"
+            size="xs"
+            leftSection={<IconDownload size={16} />}
+            onClick={() => downloadHabits(habits)}
+          >
+            Экспорт
+          </Button>
+          <Button
+            variant="light"
+            size="xs"
+            leftSection={<IconUpload size={16} />}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Импорт
+          </Button>
+          {/* Скрытый инпут для выбора файла */}
+          <input
+            type="file"
+            accept=".json,application/json"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            onChange={handleImport}
+          />
+        </Group>
+      </Group>
 
       <Paper withBorder p="md" mt="lg" radius="md">
         <HabitForm onSubmit={addHabit} />
@@ -74,8 +130,8 @@ function AppContent() {
               key={habit.id}
               habit={habit}
               onToggleToday={toggleToday}
-              onEdit={setEditingHabit} // Открываем модалку редактирования
-              onRemove={() => setDeletingHabit(habit)} // Открываем модалку удаления
+              onEdit={setEditingHabit}
+              onRemove={() => setDeletingHabit(habit)}
             />
           ))
         )}
