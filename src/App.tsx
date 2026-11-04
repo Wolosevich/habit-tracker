@@ -12,21 +12,77 @@ import {
   Modal,
   Button,
   Group,
+  ActionIcon,
+  Tooltip,
+  useMantineColorScheme,
+  useComputedColorScheme,
 } from "@mantine/core";
-import { IconDownload, IconUpload } from "@tabler/icons-react";
+import {
+  IconDownload,
+  IconUpload,
+  IconSun,
+  IconMoon,
+} from "@tabler/icons-react";
 import { downloadHabits, readHabitsFromFile } from "./lib/backup";
 import { useHabits } from "./hooks/useHabits";
 import { HabitForm } from "./components/HabitForm";
 import { HabitCard } from "./components/HabitCard";
 import type { Habit, NewHabit } from "./types/habit";
 
-const theme = createTheme({});
+const theme = createTheme({
+  colors: {
+    // Переопределяем стандартную тёмную палитру Mantine на цвета Telegram
+    dark: [
+      "#f5f5f5", // 0 - основной текст
+      "#e0e0e0", // 1
+      "#c2c2c2", // 2
+      "#a3a3a3", // 3 - текст с c="dimmed" (приглушенный)
+      "#858585", // 4
+      "#708499", // 5 - текст в placeholder
+      "#232e3c", // 6 - фон карточек (Paper, Card) и инпутов
+      "#17212b", // 7 - ОСНОВНОЙ ФОН страницы (как в Telegram)
+      "#0e1621", // 8 - более темный фон (тени, разделители)
+      "#080c11", // 9
+    ],
+  },
+  primaryColor: "blue", // Оставляем синий для акцентов (кнопок, галочек)
+});
 
 export default function App() {
   return (
-    <MantineProvider theme={theme} defaultColorScheme="light">
+    // defaultColorScheme="auto" позволяет при первом запуске
+    // подхватить тему из настроек операционной системы пользователя
+    <MantineProvider theme={theme} defaultColorScheme="auto">
       <AppContent />
     </MantineProvider>
+  );
+}
+
+// Выносим кнопку переключения темы в отдельный маленький компонент
+function ThemeToggle() {
+  const { setColorScheme } = useMantineColorScheme();
+  // useComputedColorScheme нужен, чтобы понять, какая тема сейчас реально активна
+  const computedColorScheme = useComputedColorScheme("light", {
+    getInitialValueInEffect: true,
+  });
+
+  return (
+    <Tooltip label="Переключить тему">
+      <ActionIcon
+        variant="default"
+        size="lg"
+        aria-label="Toggle color scheme"
+        onClick={() =>
+          setColorScheme(computedColorScheme === "light" ? "dark" : "light")
+        }
+      >
+        {computedColorScheme === "light" ? (
+          <IconMoon size={20} stroke={1.5} />
+        ) : (
+          <IconSun size={20} stroke={1.5} />
+        )}
+      </ActionIcon>
+    </Tooltip>
   );
 }
 
@@ -42,7 +98,6 @@ function AppContent() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Состояния для модалок
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
 
@@ -77,7 +132,7 @@ function AppContent() {
 
   return (
     <Container size="sm" py="xl">
-      {/* Группа с заголовком и кнопками экспорта/импорта */}
+      {/* Шапка */}
       <Group justify="space-between" align="flex-end" mt="sm" mb="lg">
         <div>
           <Title order={1}>Трекер привычек</Title>
@@ -85,7 +140,9 @@ function AppContent() {
             Отслеживайте свои ежедневные привычки.
           </Text>
         </div>
+
         <Group gap="xs">
+          <ThemeToggle />
           <Button
             variant="light"
             size="xs"
@@ -102,7 +159,6 @@ function AppContent() {
           >
             Импорт
           </Button>
-          {/* Скрытый инпут для выбора файла */}
           <input
             type="file"
             accept=".json,application/json"
@@ -137,7 +193,6 @@ function AppContent() {
         )}
       </Stack>
 
-      {/* Модалка редактирования */}
       <Modal
         opened={!!editingHabit}
         onClose={() => setEditingHabit(null)}
@@ -152,7 +207,6 @@ function AppContent() {
         )}
       </Modal>
 
-      {/* Модалка подтверждения удаления */}
       <Modal
         opened={!!deletingHabit}
         onClose={() => setDeletingHabit(null)}
