@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { MonthCalendar } from "./components/MonthCalendar";
 import "@mantine/core/styles.css";
 import {
   MantineProvider,
@@ -92,6 +93,7 @@ function AppContent() {
     addHabit,
     removeHabit,
     toggleToday,
+    toggleDate,
     updateHabit,
     importHabits,
   } = useHabits();
@@ -100,6 +102,10 @@ function AppContent() {
 
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [deletingHabit, setDeletingHabit] = useState<Habit | null>(null);
+  const [calendarHabitId, setCalendarHabitId] = useState<string | null>(null);
+
+  // Всегда находим актуальную привычку по ID из свежего списка habits
+  const calendarHabit = habits.find((h) => h.id === calendarHabitId) || null;
 
   const handleUpdate = (data: NewHabit) => {
     if (editingHabit) {
@@ -188,6 +194,7 @@ function AppContent() {
               onToggleToday={toggleToday}
               onEdit={setEditingHabit}
               onRemove={() => setDeletingHabit(habit)}
+              onShowCalendar={(habit) => setCalendarHabitId(habit.id)}
             />
           ))
         )}
@@ -225,6 +232,17 @@ function AppContent() {
             Удалить
           </Button>
         </Group>
+      </Modal>
+      {/* Модалка календаря */}
+      <Modal
+        opened={!!calendarHabitId}
+        onClose={() => setCalendarHabitId(null)}
+        title={`Календарь: ${calendarHabit?.name || ""}`}
+        size="md"
+      >
+        {calendarHabit && (
+          <MonthCalendar habit={calendarHabit} onToggleDate={toggleDate} />
+        )}
       </Modal>
     </Container>
   );

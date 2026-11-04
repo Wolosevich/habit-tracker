@@ -44,6 +44,22 @@ export function useHabits() {
       }),
     );
   }, []);
+
+  const toggleDate = useCallback((id: string, date: string) => {
+    setHabits((prev) =>
+      prev.map((h) => {
+        if (h.id !== id) return h;
+        const done = h.completedDates.includes(date);
+        return {
+          ...h,
+          completedDates: done
+            ? h.completedDates.filter((d) => d !== date)
+            : [...h.completedDates, date],
+        };
+      }),
+    );
+  }, []);
+
   const importHabits = useCallback((imported: Habit[]) => {
     // Простая защита: заменяем текущие данные на импортированные
     setHabits(imported);
@@ -56,5 +72,6 @@ export function useHabits() {
     toggleToday,
     updateHabit,
     importHabits,
+    toggleDate,
   };
 }

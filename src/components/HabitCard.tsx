@@ -13,6 +13,7 @@ import {
   IconTrash,
   IconFlame,
   IconPencil,
+  IconCalendar,
 } from "@tabler/icons-react";
 import { todayKey, lastNDays, calculateStreak } from "../lib/date";
 import type { Habit } from "../types/habit";
@@ -30,6 +31,7 @@ interface HabitCardProps {
   onToggleToday: (id: string) => void;
   onRemove: (id: string) => void;
   onEdit: (habit: Habit) => void;
+  onShowCalendar: (habit: Habit) => void;
 }
 
 export function HabitCard({
@@ -37,6 +39,7 @@ export function HabitCard({
   onToggleToday,
   onRemove,
   onEdit,
+  onShowCalendar,
 }: HabitCardProps) {
   const today = todayKey();
   const doneToday = habit.completedDates.includes(today);
@@ -114,6 +117,16 @@ export function HabitCard({
             aria-label={doneToday ? "Отменить отметку" : "Отметить выполнение"}
           >
             <IconCheck size={18} />
+          </ActionIcon>
+
+          <ActionIcon
+            color="teal"
+            variant="subtle"
+            size="lg"
+            onClick={() => onShowCalendar(habit)}
+            aria-label="Календарь привычки"
+          >
+            <IconCalendar size={18} />
           </ActionIcon>
 
           {/* НОВАЯ КНОПКА */}

@@ -63,3 +63,29 @@ export function calculateStreak(completedDates: string[]): number {
 
   return streak;
 }
+/**
+ * Возвращает массив дат текущего месяца в формате YYYY-MM-DD.
+ * Начинается с понедельника (или null для пустых клеток в начале месяца).
+ */
+export function getCurrentMonthDays(): (string | null)[] {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const firstDayOfMonth = new Date(year, month, 1);
+  const lastDayOfMonth = new Date(year, month + 1, 0);
+
+  // День недели 1-го числа (0 - Вс, 1 - Пн).
+  // Переводим в формат, где Пн = 0, Вс = 6.
+  const startDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7;
+
+  // Пустые клетки в начале
+  const emptySlots = Array(startDayOfWeek).fill(null);
+
+  // Все дни месяца
+  const days = Array.from({ length: lastDayOfMonth.getDate() }, (_, i) =>
+    toDateKey(new Date(year, month, i + 1)),
+  );
+
+  return [...emptySlots, ...days];
+}
